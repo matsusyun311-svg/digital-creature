@@ -47,7 +47,7 @@ button:active{background:#2563eb;}
 <h1>Digital Creature</h1>
 
 <div class="card">
-<canvas id="sprite" width="256" height="256"></canvas>
+<canvas id="sprite"></canvas>
 
 <div id="stats">
 <div class="stat">Stage: <span id="stage"></span></div>
@@ -71,7 +71,7 @@ button:active{background:#2563eb;}
 /* ===== 画像読み込み ===== */
 
 const img = new Image();
-img.src = "./sprite.png";  // GitHub Pages安全パス
+img.src = "./sprite.png";
 
 const canvas = document.getElementById("sprite");
 const ctx = canvas.getContext("2d");
@@ -91,10 +91,15 @@ localStorage.setItem("creature",JSON.stringify(data));
 }
 
 function draw(){
-ctx.clearRect(0,0,256,256);
 
-/* とりあえず左上の画像を表示（確実テスト描画） */
-ctx.drawImage(img, 0, 0, 256, 256, 0, 0, 256, 256);
+// 画像サイズに合わせてキャンバスを自動調整
+canvas.width = img.width;
+canvas.height = img.height;
+
+ctx.clearRect(0,0,canvas.width,canvas.height);
+
+// 画像全体をそのまま描画
+ctx.drawImage(img, 0, 0);
 }
 
 function update(){
@@ -123,7 +128,6 @@ localStorage.removeItem("creature");
 location.reload();
 }
 
-/* 画像読み込み後に開始 */
 img.onload = function(){
 console.log("画像読み込み成功");
 update();
