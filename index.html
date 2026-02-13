@@ -69,15 +69,17 @@ button:active{background:#2563eb;}
 <script>
 
 /* ===== 画像読み込み ===== */
-
 const img = new Image();
 img.src = "./sprite.png";
 
 const canvas = document.getElementById("sprite");
 const ctx = canvas.getContext("2d");
 
-/* ===== ゲームデータ ===== */
+/* ===== スプライト設定（横3 × 縦2）===== */
+const COLS = 3;
+const ROWS = 2;
 
+/* ===== ゲームデータ ===== */
 let data = JSON.parse(localStorage.getItem("creature")) || {
 stage:"Egg",
 level:1,
@@ -90,24 +92,48 @@ function save(){
 localStorage.setItem("creature",JSON.stringify(data));
 }
 
+function getStageIndex(){
+switch(data.stage){
+case "Egg": return 0;
+case "Baby": return 1;
+case "Rookie": return 2;
+case "Knight": return 3;
+case "Dragon": return 4;
+default: return 0;
+}
+}
+
 function draw(){
 
-// 画像サイズに合わせてキャンバスを自動調整
-canvas.width = img.width;
-canvas.height = img.height;
+const index = getStageIndex();
+
+const spriteWidth = img.width / COLS;
+const spriteHeight = img.height / ROWS;
+
+canvas.width = spriteWidth;
+canvas.height = spriteHeight;
+
+const sx = (index % COLS) * spriteWidth;
+const sy = Math.floor(index / COLS) * spriteHeight;
 
 ctx.clearRect(0,0,canvas.width,canvas.height);
 
-// 画像全体をそのまま描画
-ctx.drawImage(img, 0, 0);
+ctx.drawImage(
+img,
+sx, sy,
+spriteWidth, spriteHeight,
+0, 0,
+spriteWidth, spriteHeight
+);
 }
 
 function update(){
-stage.innerText=data.stage;
-level.innerText=data.level;
-hp.innerText=data.hp;
-power.innerText=data.power;
-care.innerText=data.care;
+document.getElementById("stage").innerText=data.stage;
+document.getElementById("level").innerText=data.level;
+document.getElementById("hp").innerText=data.hp;
+document.getElementById("power").innerText=data.power;
+document.getElementById("care").innerText=data.care;
+
 draw();
 save();
 }
@@ -115,11 +141,20 @@ save();
 function feed(){
 data.hp+=10;
 data.care++;
+
+if(data.care>5 && data.stage==="Egg") data.stage="Baby";
+if(data.level>5 && data.stage==="Baby") data.stage="Rookie";
+
 update();
 }
 
 function train(){
 data.power+=2;
+data.level++;
+
+if(data.level>10 && data.stage==="Rookie") data.stage="Knight";
+if(data.level>20 && data.stage==="Knight") data.stage="Dragon";
+
 update();
 }
 
@@ -129,12 +164,11 @@ location.reload();
 }
 
 img.onload = function(){
-console.log("画像読み込み成功");
 update();
 };
 
 img.onerror = function(){
-alert("画像読み込み失敗！");
+alert("sprite.png が読み込めていません！");
 };
 
 </script>
