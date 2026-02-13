@@ -19,12 +19,12 @@ background:#1e293b;
 padding:20px;
 border-radius:20px;
 margin-bottom:15px;
-transition:0.3s;
 }
 canvas{
 width:180px;
 height:180px;
 image-rendering:pixelated;
+background:black;
 }
 .stat{font-size:18px;margin:5px 0;}
 button{
@@ -38,13 +38,6 @@ background:#3b82f6;
 color:white;
 }
 button:active{background:#2563eb;}
-.fade{
-animation:flash 0.5s alternate 6;
-}
-@keyframes flash{
-from{background:#1e293b;}
-to{background:#22c55e;}
-}
 </style>
 </head>
 
@@ -53,10 +46,10 @@ to{background:#22c55e;}
 <div class="container">
 <h1>Digital Creature</h1>
 
-<div class="card" id="card">
+<div class="card">
 <canvas id="sprite" width="256" height="256"></canvas>
 
-<div id="stats" style="display:none;">
+<div id="stats">
 <div class="stat">Stage: <span id="stage"></span></div>
 <div class="stat">Level: <span id="level"></span></div>
 <div class="stat">HP: <span id="hp"></span></div>
@@ -65,10 +58,9 @@ to{background:#22c55e;}
 </div>
 </div>
 
-<div id="actions" style="display:none;">
+<div>
 <button onclick="feed()">🍖 Feed</button>
 <button onclick="train()">🏋 Train</button>
-<button onclick="battle()">⚔ Battle</button>
 <button onclick="resetGame()">🔄 Reset</button>
 </div>
 
@@ -76,10 +68,10 @@ to{background:#22c55e;}
 
 <script>
 
-/* ===== スプライト読み込み（同フォルダ） ===== */
+/* ===== 画像読み込み ===== */
 
 const img = new Image();
-img.src = "./sprite.png"; // ← PNGの名前と一致させる
+img.src = "./sprite.png";  // GitHub Pages安全パス
 
 const canvas = document.getElementById("sprite");
 const ctx = canvas.getContext("2d");
@@ -91,88 +83,39 @@ stage:"Egg",
 level:1,
 hp:50,
 power:10,
-care:0,
-exp:0,
-hatch:0
+care:0
 };
-
-/* ===== スプライト位置（256x256想定） ===== */
-/* 上段: Egg | Seed | Rookie */
-/* 下段: --- | Guardian | Berserker */
-
-const spritePos = {
-Egg:[0,0],
-Seed:[256,0],
-Rookie:[512,0],
-Guardian:[256,256],
-Berserker:[512,256]
-};
-
-function draw(){
-ctx.clearRect(0,0,256,256);
-let pos = spritePos[data.stage];
-if(pos){
-ctx.drawImage(img,pos[0],pos[1],256,256,0,0,256,256);
-}
-}
 
 function save(){
 localStorage.setItem("creature",JSON.stringify(data));
 }
 
-function update(){
-draw();
+function draw(){
+ctx.clearRect(0,0,256,256);
 
-if(data.stage==="Egg"){
-card.onclick=()=>{
-data.hatch++;
-if(data.hatch>=3) hatch();
-};
-}else{
-stats.style.display="block";
-actions.style.display="block";
+/* とりあえず左上の画像を表示（確実テスト描画） */
+ctx.drawImage(img, 0, 0, 256, 256, 0, 0, 256, 256);
+}
+
+function update(){
 stage.innerText=data.stage;
 level.innerText=data.level;
 hp.innerText=data.hp;
 power.innerText=data.power;
 care.innerText=data.care;
-}
-
+draw();
 save();
 }
 
-function hatch(){
-card.classList.add("fade");
-setTimeout(()=>{
-data.stage="Seed";
+function feed(){
+data.hp+=10;
+data.care++;
 update();
-alert("Hatched!");
-},800);
 }
 
-function feed(){data.hp+=10;data.care++;update();}
-function train(){data.power+=2;data.exp+=10;checkEvolution();update();}
-function battle(){
-let enemy=Math.floor(Math.random()*20)+5;
-if(data.power>enemy){alert("Victory!");data.exp+=20;}
-else{alert("Defeat...");data.hp-=10;}
-checkEvolution();update();
-}
-
-function checkEvolution(){
-if(data.stage==="Seed"&&data.exp>=30)evolve("Rookie");
-else if(data.stage==="Rookie"&&data.exp>=80){
-if(data.care>5)evolve("Guardian");
-else evolve("Berserker");
-}
-}
-
-function evolve(newStage){
-data.stage=newStage;
-data.level++;
-card.classList.add("fade");
-setTimeout(()=>card.classList.remove("fade"),800);
-alert("Evolved to "+newStage+"!");
+function train(){
+data.power+=2;
+update();
 }
 
 function resetGame(){
@@ -180,7 +123,15 @@ localStorage.removeItem("creature");
 location.reload();
 }
 
-img.onload=update;
+/* 画像読み込み後に開始 */
+img.onload = function(){
+console.log("画像読み込み成功");
+update();
+};
+
+img.onerror = function(){
+alert("画像読み込み失敗！");
+};
 
 </script>
 
